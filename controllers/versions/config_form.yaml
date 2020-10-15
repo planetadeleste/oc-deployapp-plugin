@@ -1,0 +1,29 @@
+# Record name
+name: 'planetadeleste.deployapp::lang.version.name'
+
+# Model Form Field configuration
+form: $/planetadeleste/deployapp/models/version/fields.yaml
+
+# Model Class name
+modelClass: PlanetaDelEste\DeployApp\Models\Version
+
+# Default redirect location
+defaultRedirect: planetadeleste/deployapp/versions
+
+# Create page
+create:
+    title: 'backend::lang.form.create_title'
+    redirect: planetadeleste/deployapp/versions/update/:id
+    redirectClose: planetadeleste/deployapp/versions
+    flashSave: 'lovata.toolbox::lang.message.create_success'
+
+# Update page
+update:
+    title: 'backend::lang.form.update_title'
+    redirect: planetadeleste/deployapp/versions
+    redirectClose: planetadeleste/deployapp/versions
+    flashSave: 'lovata.toolbox::lang.message.update_success'
+    flashDelete: 'lovata.toolbox::lang.message.delete_success'
+
+# Preview page
+preview: {  }

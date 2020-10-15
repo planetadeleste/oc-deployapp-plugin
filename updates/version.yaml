@@ -1,0 +1,11 @@
+1.0.0:
+    - 'Init plugin'
+1.0.1:
+    - 'Create versions table'
+    - create_table_versions.php
+1.0.2:
+    - 'Create tables.'
+    - create_table_frontapps.php
+1.0.3:
+    - 'Add path attribute to FrontApp model'
+    - add_path_frontapps_table.php

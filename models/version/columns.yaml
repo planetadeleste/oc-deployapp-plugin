@@ -1,0 +1,21 @@
+columns:
+    version:
+        label: Versión'
+        searchable: true
+        sortable: true
+        width: 100px
+    frontapp:
+        label: Aplicación
+        relation: frontapp
+        sortable: false
+        select: name
+    created_at:
+        label: 'lovata.toolbox::lang.field.created_at'
+        type: timetense
+        sortable: true
+        invisible: true
+    updated_at:
+        label: 'lovata.toolbox::lang.field.updated_at'
+        type: timetense
+        sortable: true
+        invisible: true

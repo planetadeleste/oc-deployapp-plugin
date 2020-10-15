@@ -1,0 +1,33 @@
+plugin:
+    name: 'planetadeleste.deployapp::lang.plugin.name'
+    description: 'planetadeleste.deployapp::lang.plugin.description'
+    author: PlanetaDelEste
+    icon: icon-smile-o
+    homepage: ''
+navigation:
+    deployapp-menu-main:
+        label: 'planetadeleste.deployapp::lang.menu.versions'
+        url: planetadeleste/deployapp/versions
+        permissions:
+            - 'deployapp-menu-*'
+        icon: icon-paw
+        sideMenu:
+            deployapp-menu-versions:
+                label: 'planetadeleste.deployapp::lang.menu.versions'
+                url: planetadeleste/deployapp/versions
+                permissions:
+                    - deployapp-menu-versions
+                icon: icon-paw
+            deployapp-menu-frontapps:
+                label: 'planetadeleste.deployapp::lang.menu.frontapps'
+                url: planetadeleste/deployapp/frontapps
+                permissions:
+                    - deployapp-menu-frontapps
+                icon: icon-paw
+permissions:
+    deployapp-menu-frontapps:
+        label: 'planetadeleste.deployapp::lang.permission.frontapp'
+        tab: 'planetadeleste.deployapp::lang.tab.permissions'
+    deployapp-menu-versions:
+        label: 'planetadeleste.deployapp::lang.permission.version'
+        tab: 'planetadeleste.deployapp::lang.tab.permissions'

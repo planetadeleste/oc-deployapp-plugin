@@ -1,0 +1,16 @@
+fields:
+    name:
+        label: 'lovata.toolbox::lang.field.name'
+        span: left
+        required: 1
+        type: text
+        placeholder: 'lovata.toolbox::lang.field.name'
+    path:
+        label: 'planetadeleste.deployapp::lang.component.deploy.path_title'
+        span: right
+        required: 1
+        type: text
+        placeholder: 'planetadeleste.deployapp::lang.field.path'
+tabs:
+    fields:
+

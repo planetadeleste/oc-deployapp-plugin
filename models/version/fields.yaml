@@ -1,0 +1,22 @@
+fields:
+    frontapp:
+        label: Aplicación
+        span: left
+        type: relation
+        nameFrom: name
+        emptyOption: 'lovata.toolbox::lang.field.empty'
+
+    version:
+        label: Versión
+        span: right
+        type: dropdown
+        dependsOn: frontapp
+
+    description:
+        label: 'lovata.toolbox::lang.field.description'
+        type: markdown
+        size: large
+        span: full
+tabs:
+    fields:
+

@@ -1,0 +1,29 @@
+# Record name
+name: 'planetadeleste.deployapp::lang.frontapp.name'
+
+# Model Form Field configuration
+form: $/planetadeleste/deployapp/models/frontapp/fields.yaml
+
+# Model Class name
+modelClass: PlanetaDelEste\DeployApp\Models\FrontApp
+
+# Default redirect location
+defaultRedirect: planetadeleste/deployapp/frontapps
+
+# Create page
+create:
+    title: 'backend::lang.form.create_title'
+    redirect: planetadeleste/deployapp/frontapps/update/:id
+    redirectClose: planetadeleste/deployapp/frontapps
+    flashSave: 'lovata.toolbox::lang.message.create_success'
+
+# Update page
+update:
+    title: 'backend::lang.form.update_title'
+    redirect: planetadeleste/deployapp/frontapps
+    redirectClose: planetadeleste/deployapp/frontapps
+    flashSave: 'lovata.toolbox::lang.message.update_success'
+    flashDelete: 'lovata.toolbox::lang.message.delete_success'
+
+# Preview page
+preview: {  }
