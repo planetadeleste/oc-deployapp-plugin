@@ -2,28 +2,28 @@ plugin:
     name: 'planetadeleste.deployapp::lang.plugin.name'
     description: 'planetadeleste.deployapp::lang.plugin.description'
     author: PlanetaDelEste
-    icon: icon-smile-o
+    icon: icon-paper-plane
     homepage: ''
 navigation:
     deployapp-menu-main:
-        label: 'planetadeleste.deployapp::lang.menu.versions'
+        label: 'planetadeleste.deployapp::lang.plugin.name'
         url: planetadeleste/deployapp/versions
         permissions:
             - 'deployapp-menu-*'
-        icon: icon-paw
+        icon: icon-info
         sideMenu:
             deployapp-menu-versions:
                 label: 'planetadeleste.deployapp::lang.menu.versions'
                 url: planetadeleste/deployapp/versions
                 permissions:
                     - deployapp-menu-versions
-                icon: icon-paw
+                icon: icon-info
             deployapp-menu-frontapps:
                 label: 'planetadeleste.deployapp::lang.menu.frontapps'
                 url: planetadeleste/deployapp/frontapps
                 permissions:
                     - deployapp-menu-frontapps
-                icon: icon-paw
+                icon: icon-picture-o
 permissions:
     deployapp-menu-frontapps:
         label: 'planetadeleste.deployapp::lang.permission.frontapp'

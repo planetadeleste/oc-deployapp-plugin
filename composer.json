@@ -1,0 +1,26 @@
+{
+    "name":"planetadeleste/oc-deployapp-plugin",
+    "description":"Manage versioning apps",
+    "type":"october-plugin",
+    "license":"MIT",
+    "keywords":[
+        "october",
+        "app",
+        "deploy"
+    ],
+    "authors":[
+        {
+            "name":"Alvaro Canepa",
+            "email":"bfpdevel@gmail.com",
+            "role":"creator"
+        }
+    ],
+    "autoload":{
+        "psr-4":{
+            "PlanetaDelEste\\DeployApp\\":""
+        }
+    },
+    "require":{
+        "php":">=7.2"
+    }
+}
