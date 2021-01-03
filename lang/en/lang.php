@@ -4,7 +4,8 @@
         'description' => '',
     ],
     'field'      => [
-        'path' => 'Path to deploy versions'
+        'path' => 'Path to deploy versions',
+        'path_comment' => 'Path must have `assets` folder inside. Ex. `{author}/{plugin}`'
     ],
     'menu'       => [
         'main'      => 'DeployApp',

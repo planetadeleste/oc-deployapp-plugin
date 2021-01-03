@@ -4,6 +4,11 @@ columns:
         type: text
         searchable: true
         sortable: true
+    path:
+        label: 'planetadeleste.deployapp::lang.field.path'
+        type: text
+        searchable: true
+        sortable: true
     id:
         label: 'lovata.toolbox::lang.field.id'
         type: number

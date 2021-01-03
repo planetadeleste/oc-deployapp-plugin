@@ -7,6 +7,8 @@ fields:
         placeholder: 'lovata.toolbox::lang.field.name'
     path:
         label: 'planetadeleste.deployapp::lang.component.deploy.path_title'
+        comment: 'planetadeleste.deployapp::lang.field.path_comment'
+        commentMd: 1
         span: right
         required: 1
         type: text
