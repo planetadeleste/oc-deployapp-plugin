@@ -78,7 +78,7 @@ class FrontApp extends Model
         $arPath = [
             rtrim($this->path, '/'),
             'assets',
-            $this->name
+            str_slug($this->name)
         ];
         $sPath = plugins_path(join('/', $arPath));
         if (!File::exists($sPath)) {
