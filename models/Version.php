@@ -78,6 +78,10 @@ class Version extends Model
      */
     public static function rawColumn()
     {
+        if (config('database.default') == 'pgsql') {
+            return Db::raw("string_to_array(version, '.')::int[]");
+        }
+
         return Db::raw("INET_ATON(SUBSTRING_INDEX(CONCAT(version,'.0.0.0'),'.',4))");
     }
 

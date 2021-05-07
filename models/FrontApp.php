@@ -92,6 +92,7 @@ class FrontApp extends Model
             },
             File::directories($sPath)
         );
+        usort($arVersionList, 'version_compare');
 
         if (!empty($arVersionList)) {
             return array_combine(array_values($arVersionList), array_values($arVersionList));
