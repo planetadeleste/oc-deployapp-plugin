@@ -9,3 +9,6 @@
 1.0.3:
     - 'Add path attribute to FrontApp model'
     - add_path_frontapps_table.php
+1.0.4:
+    - Add support for PostgreeSql
+    - List versions sorted
