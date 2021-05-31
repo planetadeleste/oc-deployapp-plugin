@@ -50,6 +50,7 @@ class Deploy extends ComponentBase
         if (!$iFrontAppId) {
             return;
         }
+        $this->page['token'] = session()->token();
         $obFrontApp = FrontApp::find($iFrontAppId);
         $this->sBasePath = str_slug($obFrontApp->name);
         $this->version = Version::getLatestVersion($iFrontAppId);

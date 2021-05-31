@@ -85,6 +85,7 @@ class FrontApp extends Model
             return [];
         }
 
+        $arCurrentVersionList = Version::where('frontapp_id', $this->id)->lists('version');
         $arVersionList = array_map(
             function ($sPath) {
                 $arParts = explode('/', $sPath);
@@ -92,9 +93,11 @@ class FrontApp extends Model
             },
             File::directories($sPath)
         );
-        usort($arVersionList, 'version_compare');
+        $arVersionList = array_diff($arVersionList, $arCurrentVersionList);
 
         if (!empty($arVersionList)) {
+            usort($arVersionList, 'version_compare');
+            $arVersionList = array_reverse($arVersionList);
             return array_combine(array_values($arVersionList), array_values($arVersionList));
         }
 
