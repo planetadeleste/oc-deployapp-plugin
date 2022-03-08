@@ -21,7 +21,8 @@
     'component'  => [
         'deploy' => [
             'path_title'     => 'Versioning path, relative to plugins folder.',
-            'frontapp_title' => 'Category where store versioning application'
+            'frontapp_title' => 'Category where store versioning application',
+            'fromhtm_title' => 'Get assets from index.html (vite method)',
         ]
     ],
     'permission' => [

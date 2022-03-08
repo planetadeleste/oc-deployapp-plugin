@@ -1,6 +1,7 @@
 <?php namespace PlanetaDelEste\DeployApp\Components;
 
 use Cms\Classes\ComponentBase;
+use DiDom\Document;
 use Event;
 use File;
 use PlanetaDelEste\DeployApp\Models\FrontApp;
@@ -9,7 +10,8 @@ use System\Classes\PluginManager;
 
 class Deploy extends ComponentBase
 {
-    const BEFORE_DEPLOY = 'planetadeleste.deployapp.before.deploy';
+    public const BEFORE_DEPLOY = 'planetadeleste.deployapp.before.deploy';
+
     /**
      * @var string
      */
@@ -25,7 +27,7 @@ class Deploy extends ComponentBase
      */
     protected $sVersionsPath;
 
-    public function componentDetails()
+    public function componentDetails(): array
     {
         return [
             'name'        => 'Deploy Component',
@@ -33,18 +35,22 @@ class Deploy extends ComponentBase
         ];
     }
 
-    public function defineProperties()
+    public function defineProperties(): array
     {
         return [
             'frontapp' => [
                 'title'    => 'planetadeleste.deployapp::lang.component.deploy.frontapp_title',
                 'type'     => 'dropdown',
                 'required' => true
+            ],
+            'fromhtml' => [
+                'title' => 'planetadeleste.deployapp::lang.component.deploy.fromhtm_title',
+                'type'  => 'checkbox'
             ]
         ];
     }
 
-    public function onRun()
+    public function onRun(): void
     {
         $iFrontAppId = $this->property('frontapp');
         if (!$iFrontAppId) {
@@ -58,7 +64,7 @@ class Deploy extends ComponentBase
         $this->buildAssets();
     }
 
-    protected function buildAssets()
+    protected function buildAssets(): void
     {
         if (!$this->version) {
             return;
@@ -71,14 +77,26 @@ class Deploy extends ComponentBase
             $this->sBasePath
         ];
         $arPath[] = $this->version;
-        $sPath = plugins_path(join('/', $arPath));
+        $sPath = plugins_path(implode('/', $arPath));
 
         if (!File::exists($sPath)) {
             return;
         }
 
+        $sAssetsPath = config('cms.pluginsPath', '/plugins').'/'.$this->property('path');
+        $sAssetsPath = rtrim($sAssetsPath, '/');
+        $this->assetPath = $sAssetsPath;
+
+        if ($this->property('fromhtml')) {
+            $this->buildAssetsFromHtml($sPath);
+        } else {
+            $this->buildAssetsFromFiles($sPath);
+        }
+    }
+
+    protected function buildAssetsFromFiles(string $sPath): void
+    {
         $pluginPath = plugins_path($this->property('path'));
-        $this->assetPath = config('cms.pluginsPath', '/plugins').'/'.$this->property('path');
 
         // Find JS files
         $arJSFiles = [
@@ -121,11 +139,6 @@ class Deploy extends ComponentBase
             $this->addCss($jsFile, ['rel' => 'prefetch']);
         }
 
-        // Add preload styles
-//        $attrs = ['rel' => 'preload', 'as' => 'style'];
-//        $this->addCss($arCSSFiles['app'], $attrs);
-//        $this->addCss($arCSSFiles['vendors'], $attrs);
-
         // Add modulepreload js
         $attrs = ['rel' => 'modulepreload', 'as' => 'script'];
         $this->addCss($arJSFiles['app'], $attrs);
@@ -138,12 +151,49 @@ class Deploy extends ComponentBase
         // Add JS
         $this->addJs($arJSFiles['app'], ['type' => 'module']);
         $this->addJs($arJSFiles['vendors'], ['type' => 'module']);
+    }
 
+    protected function buildAssetsFromHtml(string $sPath): void
+    {
+        $pluginPath = plugins_path($this->property('path'));
+        $sFilePath = str_replace($pluginPath.'/', '', $sPath);
 
-        // Add Legacy JS
-//        $this->addJs('assets/js/legacy.js');
-//        $this->addJs($assetsPath.'/js/chunk-vendors-legacy.js', ['nomodule' => '']);
-//        $this->addJs($assetsPath.'/js/app-legacy.js', ['nomodule' => '']);
+        $obDoc = new Document();
+        $obDoc->loadHtmlFile($sPath.'/index.html');
+
+        // Parse <script />
+        $arScript = $obDoc->find('head > script');
+        if (!empty($arScript) && is_array($arScript)) {
+            foreach ($arScript as $obScript) {
+                $arScriptAttr = $obScript->attributes();
+                if ($sSrc = array_get($arScriptAttr, 'src')) {
+                    $sSrc = str_replace('./', $sFilePath.'/', $sSrc);
+                    array_forget($arScriptAttr, 'src');
+                }
+
+                $this->addJs($sSrc, $arScriptAttr);
+            }
+        }
+
+        // Parse <link />
+        $arLink = $obDoc->find('head > link');
+        if (!empty($arLink) && is_array($arLink)) {
+            foreach ($arLink as $obLink) {
+                $arLinkAttr = $obLink->attributes();
+                $sRel = array_get($arLinkAttr, 'rel');
+                // Skip rel=icon
+                if ($sRel === 'icon') {
+                    continue;
+                }
+
+                if ($sHref = array_get($arLinkAttr, 'href')) {
+                    $sHref = str_replace('./', $sFilePath.'/', $sHref);
+                    array_forget($arLinkAttr, 'href');
+                }
+
+                $this->addCss($sHref, $arLinkAttr);
+            }
+        }
     }
 
     /**
@@ -154,7 +204,7 @@ class Deploy extends ComponentBase
         return (array)FrontApp::orderBy('name')->lists('name', 'id');
     }
 
-    public function getPathOptions()
+    public function getPathOptions(): array
     {
         return collect(PluginManager::instance()->getPlugins())
             ->mapWithKeys(
