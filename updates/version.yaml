@@ -12,3 +12,5 @@
 1.0.4:
     - Add support for PostgreeSql
     - List versions sorted
+1.0.5:
+    - Add resources path to store apps

@@ -38,15 +38,19 @@ class Deploy extends ComponentBase
     public function defineProperties(): array
     {
         return [
-            'frontapp' => [
+            'frontapp'  => [
                 'title'    => 'planetadeleste.deployapp::lang.component.deploy.frontapp_title',
                 'type'     => 'dropdown',
                 'required' => true
             ],
-            'fromhtml' => [
+            'fromhtml'  => [
                 'title' => 'planetadeleste.deployapp::lang.component.deploy.fromhtm_title',
                 'type'  => 'checkbox'
-            ]
+            ],
+            'resources' => [
+                'title' => 'planetadeleste.deployapp::lang.component.deploy.resources_title',
+                'type'  => 'checkbox'
+            ],
         ];
     }
 
@@ -71,13 +75,17 @@ class Deploy extends ComponentBase
         }
 
         // Construct assets path
-        $arPath = [
-            rtrim($this->sVersionsPath, '/'),
-            'assets',
-            $this->sBasePath
-        ];
-        $arPath[] = $this->version;
-        $sPath = plugins_path(implode('/', $arPath));
+        if ($this->property('resources')) {
+            $sPath = resource_path('views/'.$this->sBasePath.'/'.$this->version);
+        } else {
+            $arPath = [
+                rtrim($this->sVersionsPath, '/'),
+                'assets',
+                $this->sBasePath
+            ];
+            $arPath[] = $this->version;
+            $sPath = plugins_path(implode('/', $arPath));
+        }
 
         if (!File::exists($sPath)) {
             return;
@@ -157,6 +165,7 @@ class Deploy extends ComponentBase
     {
         $pluginPath = plugins_path($this->property('path'));
         $sFilePath = str_replace($pluginPath.'/', '', $sPath);
+        $sStartsWith = $this->property('resources') ? '/resources' : '/plugins';
 
         $obDoc = new Document();
         $obDoc->loadHtmlFile($sPath.'/index.html');
@@ -166,8 +175,11 @@ class Deploy extends ComponentBase
         if (!empty($arScript) && is_array($arScript)) {
             foreach ($arScript as $obScript) {
                 $arScriptAttr = $obScript->attributes();
-                if ($sSrc = array_get($arScriptAttr, 'src')) {
-                    $sSrc = str_replace('./', $sFilePath.'/', $sSrc);
+                trace_log($arScriptAttr);
+
+                if (($sSrc = array_get($arScriptAttr, 'src')) && !str_starts_with($sSrc, $sStartsWith)) {
+                    $sSrc = ltrim($sSrc, './');
+                    $sSrc = $sFilePath.'/'.$sSrc;
                     array_forget($arScriptAttr, 'src');
                 }
 
@@ -186,8 +198,9 @@ class Deploy extends ComponentBase
                     continue;
                 }
 
-                if ($sHref = array_get($arLinkAttr, 'href')) {
-                    $sHref = str_replace('./', $sFilePath.'/', $sHref);
+                if (($sHref = array_get($arLinkAttr, 'href')) && !str_starts_with($sHref, $sStartsWith)) {
+                    $sHref = ltrim($sHref, './');
+                    $sHref = $sFilePath.'/'.$sHref;
                     array_forget($arLinkAttr, 'href');
                 }
 
