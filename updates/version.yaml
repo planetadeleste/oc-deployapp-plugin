@@ -13,4 +13,8 @@
     - Add support for PostgreeSql
     - List versions sorted
 1.0.5:
+    - Prevent duplicated versions
+1.0.6:
+    - Get assets from html index app
+1.0.7:
     - Add resources path to store apps
