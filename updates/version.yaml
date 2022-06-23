@@ -10,11 +10,10 @@
     - 'Add path attribute to FrontApp model'
     - add_path_frontapps_table.php
 1.0.4:
-    - Add support for PostgreeSql
-    - List versions sorted
+    - 'Add support for PostgreeSql'
+    - 'List versions sorted'
 1.0.5:
-    - Prevent duplicated versions
+    - 'Add resources path to store apps'
 1.0.6:
-    - Get assets from html index app
-1.0.7:
-    - Add resources path to store apps
+    - 'Add resources property to FrontApps model'
+    - add_resources_frontapps_table.php
