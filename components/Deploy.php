@@ -1,4 +1,6 @@
-<?php namespace PlanetaDelEste\DeployApp\Components;
+<?php
+
+namespace PlanetaDelEste\DeployApp\Components;
 
 use Cms\Classes\ComponentBase;
 use DiDom\Document;
@@ -31,7 +33,7 @@ class Deploy extends ComponentBase
     {
         return [
             'name'        => 'Deploy Component',
-            'description' => 'No description provided yet...'
+            'description' => 'No description provided yet...',
         ];
     }
 
@@ -41,15 +43,15 @@ class Deploy extends ComponentBase
             'frontapp'  => [
                 'title'    => 'planetadeleste.deployapp::lang.component.deploy.frontapp_title',
                 'type'     => 'dropdown',
-                'required' => true
+                'required' => true,
             ],
             'fromhtml'  => [
                 'title' => 'planetadeleste.deployapp::lang.component.deploy.fromhtm_title',
-                'type'  => 'checkbox'
+                'type'  => 'checkbox',
             ],
             'resources' => [
                 'title' => 'planetadeleste.deployapp::lang.component.deploy.resources_title',
-                'type'  => 'checkbox'
+                'type'  => 'checkbox',
             ],
         ];
     }
@@ -57,13 +59,15 @@ class Deploy extends ComponentBase
     public function onRun(): void
     {
         $iFrontAppId = $this->property('frontapp');
+
         if (!$iFrontAppId) {
             return;
         }
+
         $this->page['token'] = session()->token();
-        $obFrontApp = FrontApp::find($iFrontAppId);
-        $this->sBasePath = str_slug($obFrontApp->name);
-        $this->version = Version::getLatestVersion($iFrontAppId);
+        $obFrontApp          = FrontApp::find($iFrontAppId);
+        $this->sBasePath     = str_slug($obFrontApp->name);
+        $this->version       = Version::getLatestVersion($iFrontAppId);
         $this->sVersionsPath = $obFrontApp->path;
         $this->buildAssets();
     }
@@ -75,27 +79,27 @@ class Deploy extends ComponentBase
         }
 
         // Construct assets path
-        if ($this->property('resources')) {
+        if ($this->isResources()) {
             $sPath = resource_path('views/'.$this->sBasePath.'/'.$this->version);
         } else {
-            $arPath = [
+            $arPath   = [
                 rtrim($this->sVersionsPath, '/'),
                 'assets',
-                $this->sBasePath
+                $this->sBasePath,
             ];
             $arPath[] = $this->version;
-            $sPath = plugins_path(implode('/', $arPath));
+            $sPath    = plugins_path(implode('/', $arPath));
         }
 
         if (!File::exists($sPath)) {
             return;
         }
 
-        $sAssetsPath = config('cms.pluginsPath', '/plugins').'/'.$this->property('path');
-        $sAssetsPath = rtrim($sAssetsPath, '/');
+        $sAssetsPath     = $this->path() ? config('cms.pluginsPath', '/plugins').'/'.$this->path() : '/resources/views/'.$this->sBasePath;
+        $sAssetsPath     = rtrim($sAssetsPath, '/');
         $this->assetPath = $sAssetsPath;
 
-        if ($this->property('fromhtml')) {
+        if ($this->isFromHtml()) {
             $this->buildAssetsFromHtml($sPath);
         } else {
             $this->buildAssetsFromFiles($sPath);
@@ -110,12 +114,13 @@ class Deploy extends ComponentBase
         $arJSFiles = [
             'chunk'   => [],
             'vendors' => null,
-            'app'     => null
+            'app'     => null,
         ];
         collect(File::glob($sPath.'/js/*.js'))
             ->each(
-                function ($sFile) use (&$arJSFiles, $pluginPath) {
+                static function ($sFile) use (&$arJSFiles, $pluginPath): void {
                     $sFile = str_replace($pluginPath.'/', '', $sFile);
+
                     if (str_contains($sFile, 'app.')) {
                         $arJSFiles['app'] = $sFile;
                     } elseif (str_contains($sFile, 'vendors.')) {
@@ -130,8 +135,9 @@ class Deploy extends ComponentBase
         $arCSSFiles = ['app' => null, 'vendors' => null];
         collect(File::glob($sPath.'/css/*.css'))
             ->each(
-                function ($sFile) use (&$arCSSFiles, $pluginPath) {
+                static function ($sFile) use (&$arCSSFiles, $pluginPath): void {
                     $sFile = str_replace($pluginPath.'/', '', $sFile);
+
                     if (str_contains($sFile, 'app.')) {
                         $arCSSFiles['app'] = $sFile;
                     } elseif (str_contains($sFile, 'vendors.')) {
@@ -163,25 +169,28 @@ class Deploy extends ComponentBase
 
     protected function buildAssetsFromHtml(string $sPath): void
     {
-        $pluginPath = plugins_path($this->property('path'));
-        $sFilePath = str_replace($pluginPath.'/', '', $sPath);
-        $sStartsWith = $this->property('resources') ? '/resources' : '/plugins';
+        $sSearchPath = $this->isResources() ? resource_path('views/'.$this->sBasePath) : plugins_path($this->path());
+        $sFilePath   = str_replace($sSearchPath.'/', '', $sPath);
+        $sStartsWith = $this->isResources() ? '/resources' : '/plugins';
 
         $obDoc = new Document();
         $obDoc->loadHtmlFile($sPath.'/index.html');
 
         // Parse <script />
         $arScript = $obDoc->find('head > script');
+
         if (!empty($arScript) && is_array($arScript)) {
             foreach ($arScript as $obScript) {
                 $arScriptAttr = $obScript->attributes();
-                trace_log($arScriptAttr);
+                $sSrc         = array_get($arScriptAttr, 'src');
+                $sSrc         = $this->getResourcesPath($sSrc);
+                array_forget($arScriptAttr, 'src');
 
-                if (($sSrc = array_get($arScriptAttr, 'src')) && !str_starts_with($sSrc, $sStartsWith)) {
-                    $sSrc = ltrim($sSrc, './');
-                    $sSrc = $sFilePath.'/'.$sSrc;
-                    array_forget($arScriptAttr, 'src');
-                }
+//                if (($sSrc = array_get($arScriptAttr, 'src')) && !str_contains($sSrc, $sStartsWith)) {
+//                    $sSrc = ltrim($sSrc, './');
+//                    $sSrc = $sFilePath.'/'.$sSrc;
+//                    array_forget($arScriptAttr, 'src');
+//                }
 
                 $this->addJs($sSrc, $arScriptAttr);
             }
@@ -189,23 +198,30 @@ class Deploy extends ComponentBase
 
         // Parse <link />
         $arLink = $obDoc->find('head > link');
-        if (!empty($arLink) && is_array($arLink)) {
-            foreach ($arLink as $obLink) {
-                $arLinkAttr = $obLink->attributes();
-                $sRel = array_get($arLinkAttr, 'rel');
-                // Skip rel=icon
-                if ($sRel === 'icon') {
-                    continue;
-                }
 
-                if (($sHref = array_get($arLinkAttr, 'href')) && !str_starts_with($sHref, $sStartsWith)) {
-                    $sHref = ltrim($sHref, './');
-                    $sHref = $sFilePath.'/'.$sHref;
-                    array_forget($arLinkAttr, 'href');
-                }
+        if (empty($arLink) || !is_array($arLink)) {
+            return;
+        }
 
-                $this->addCss($sHref, $arLinkAttr);
+        foreach ($arLink as $obLink) {
+            $arLinkAttr = $obLink->attributes();
+            $sRel       = array_get($arLinkAttr, 'rel');
+            $sHref      = array_get($arLinkAttr, 'href');
+            $sHref      = $this->getResourcesPath($sHref);
+            array_forget($arLinkAttr, 'href');
+
+            // Skip rel=icon
+            if ($sRel === 'icon') {
+                continue;
             }
+
+//            if (($sHref = array_get($arLinkAttr, 'href')) && !str_starts_with($sHref, $sStartsWith)) {
+//                $sHref = ltrim($sHref, './');
+//                $sHref = $sFilePath.'/'.$sHref;
+//                array_forget($arLinkAttr, 'href');
+//            }
+
+            $this->addCss($sHref, $arLinkAttr);
         }
     }
 
@@ -214,24 +230,63 @@ class Deploy extends ComponentBase
      */
     public function getFrontappOptions(): array
     {
-        return (array)FrontApp::orderBy('name')->lists('name', 'id');
+        return (array) FrontApp::orderBy('name')->lists('name', 'id');
     }
 
     public function getPathOptions(): array
     {
         return collect(PluginManager::instance()->getPlugins())
             ->mapWithKeys(
-                function ($obPlugin, $sPlugin) {
-                    $sPluginPath = str_replace('.', '/', strtolower($sPlugin));
+                static function ($obPlugin, $sPlugin) {
+                    $sPluginPath       = str_replace('.', '/', strtolower($sPlugin));
                     $sPluginAssetsPath = $sPluginPath.'/assets';
+
                     return [$sPluginPath => $sPluginAssetsPath];
                 }
             )
             ->filter(
-                function ($sPluginPath) {
+                static function ($sPluginPath) {
                     return File::exists(plugins_path($sPluginPath));
                 }
             )
             ->toArray();
+    }
+
+    protected function getResourcesPath(string $sSrc): string
+    {
+        $sSrc   = trim($sSrc, '/');
+        $arPath = explode('/', $sSrc);
+
+        if ($arPath[0] !== 'resources') {
+            array_shift($arPath);
+        }
+
+        $sSrc = implode('/', $arPath);
+
+        return str_replace('resources/views/'.$this->sBasePath.'/', '', $sSrc);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isResources(): bool
+    {
+        return (bool) $this->property('resources', false);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isFromHtml(): bool
+    {
+        return (bool) $this->property('fromhtml', false);
+    }
+
+    /**
+     * @return string|null
+     */
+    protected function path(): ?string
+    {
+        return $this->property('path');
     }
 }

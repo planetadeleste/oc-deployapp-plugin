@@ -21,3 +21,6 @@
 1.0.8:
     - 'Add resources property to FrontApps model'
     - add_resources_frontapps_table.php
+1.0.9:
+    - 'Remove path from rules'
+    - 'Fix setting assets from resources path'

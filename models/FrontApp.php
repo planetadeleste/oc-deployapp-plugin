@@ -48,7 +48,7 @@ class FrontApp extends Model
     /** @var array */
     public $rules = [
         'name' => 'required',
-        'path' => 'required',
+//        'path' => 'required',
     ];
 
     /** @var array */
@@ -79,7 +79,7 @@ class FrontApp extends Model
      */
     public function listVersions(): array
     {
-        if (!$this->path) {
+        if (!$this->path && !$this->resources) {
             return [];
         }
 
