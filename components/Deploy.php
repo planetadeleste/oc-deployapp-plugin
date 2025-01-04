@@ -4,6 +4,7 @@ namespace PlanetaDelEste\DeployApp\Components;
 
 use Cms\Classes\ComponentBase;
 use DiDom\Document;
+use DiDom\Exceptions\InvalidSelectorException;
 use Event;
 use File;
 use PlanetaDelEste\DeployApp\Models\FrontApp;
@@ -40,28 +41,40 @@ class Deploy extends ComponentBase
     public function defineProperties(): array
     {
         return [
-            'frontapp'  => [
-                'title'    => 'planetadeleste.deployapp::lang.component.deploy.frontapp_title',
-                'type'     => 'dropdown',
-                'required' => true,
+            'frontapp'      => [
+                'title' => 'planetadeleste.deployapp::lang.component.deploy.frontapp_title',
+                'type'  => 'dropdown',
             ],
-            'fromhtml'  => [
+            'frontapp_name' => [
+                'title' => 'lovata.toolbox::lang.field.name',
+                'type'  => 'text',
+            ],
+            'fromhtml'      => [
                 'title' => 'planetadeleste.deployapp::lang.component.deploy.fromhtm_title',
                 'type'  => 'checkbox',
             ],
-            'resources' => [
+            'resources'     => [
                 'title' => 'planetadeleste.deployapp::lang.component.deploy.resources_title',
                 'type'  => 'checkbox',
             ],
         ];
     }
 
-    public function onRun(): void
+    /**
+     * @return void
+     *
+     * @throws \Exception
+     */
+    public function onRender(): void
     {
-        $iFrontAppId = $this->property('frontapp');
+        if ((!$iFrontAppId = $this->property('frontapp')) && ($sFrontName = $this->property('frontapp_name'))) {
+            $iFrontAppId = FrontApp::where('name', $sFrontName)->value('id');
+        }
 
         if (!$iFrontAppId) {
-            return;
+            $sMessage = isset($sFrontName) ? sprintf('No aplication found with name %s', $sFrontName) : 'No application found.';
+
+            throw new \Exception($sMessage);
         }
 
         $this->page['token'] = session()->token();
@@ -72,6 +85,11 @@ class Deploy extends ComponentBase
         $this->buildAssets();
     }
 
+    /**
+     * @return void
+     *
+     * @throws InvalidSelectorException
+     */
     protected function buildAssets(): void
     {
         if (!$this->version) {
@@ -106,6 +124,11 @@ class Deploy extends ComponentBase
         }
     }
 
+    /**
+     * @param string $sPath
+     *
+     * @return void
+     */
     protected function buildAssetsFromFiles(string $sPath): void
     {
         $pluginPath = plugins_path($this->property('path'));
@@ -146,7 +169,7 @@ class Deploy extends ComponentBase
                 }
             );
 
-        Event::fire(self::BEFORE_DEPLOY, [$this]);
+        $this->fireSystemEvent(self::BEFORE_DEPLOY);
 
         // Add chunk js files
         foreach ($arJSFiles['chunk'] as $jsFile) {
@@ -167,6 +190,13 @@ class Deploy extends ComponentBase
         $this->addJs($arJSFiles['vendors'], ['type' => 'module']);
     }
 
+    /**
+     * @param string $sPath
+     *
+     * @return void
+     *
+     * @throws InvalidSelectorException
+     */
     protected function buildAssetsFromHtml(string $sPath): void
     {
         $sSearchPath = $this->isResources() ? resource_path('views/'.$this->sBasePath) : plugins_path($this->path());
@@ -186,11 +216,11 @@ class Deploy extends ComponentBase
                 $sSrc         = $this->getResourcesPath($sSrc);
                 array_forget($arScriptAttr, 'src');
 
-//                if (($sSrc = array_get($arScriptAttr, 'src')) && !str_contains($sSrc, $sStartsWith)) {
-//                    $sSrc = ltrim($sSrc, './');
-//                    $sSrc = $sFilePath.'/'.$sSrc;
-//                    array_forget($arScriptAttr, 'src');
-//                }
+// if (($sSrc = array_get($arScriptAttr, 'src')) && !str_contains($sSrc, $sStartsWith)) {
+// $sSrc = ltrim($sSrc, './');
+// $sSrc = $sFilePath.'/'.$sSrc;
+// array_forget($arScriptAttr, 'src');
+// }
 
                 $this->addJs($sSrc, $arScriptAttr);
             }
@@ -215,11 +245,11 @@ class Deploy extends ComponentBase
                 continue;
             }
 
-//            if (($sHref = array_get($arLinkAttr, 'href')) && !str_starts_with($sHref, $sStartsWith)) {
-//                $sHref = ltrim($sHref, './');
-//                $sHref = $sFilePath.'/'.$sHref;
-//                array_forget($arLinkAttr, 'href');
-//            }
+// if (($sHref = array_get($arLinkAttr, 'href')) && !str_starts_with($sHref, $sStartsWith)) {
+// $sHref = ltrim($sHref, './');
+// $sHref = $sFilePath.'/'.$sHref;
+// array_forget($arLinkAttr, 'href');
+// }
 
             $this->addCss($sHref, $arLinkAttr);
         }
@@ -233,6 +263,9 @@ class Deploy extends ComponentBase
         return (array) FrontApp::orderBy('name')->lists('name', 'id');
     }
 
+    /**
+     * @return array
+     */
     public function getPathOptions(): array
     {
         return collect(PluginManager::instance()->getPlugins())
@@ -252,6 +285,11 @@ class Deploy extends ComponentBase
             ->toArray();
     }
 
+    /**
+     * @param string $sSrc
+     *
+     * @return string
+     */
     protected function getResourcesPath(string $sSrc): string
     {
         $sSrc   = trim($sSrc, '/');

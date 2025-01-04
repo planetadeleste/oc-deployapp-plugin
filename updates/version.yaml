@@ -24,3 +24,6 @@
 1.0.9:
     - 'Remove path from rules'
     - 'Fix setting assets from resources path'
+1.0.10:
+    - 'Add frontapp_name property'
+    - 'Use onRender instead of OnRun'
