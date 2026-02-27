@@ -9,7 +9,7 @@ fields:
     version:
         label: Versión
         span: right
-        type: dropdown
+        type: radio
         dependsOn: frontapp
 
     description:
@@ -17,6 +17,4 @@ fields:
         type: markdown
         size: large
         span: full
-tabs:
-    fields:
 

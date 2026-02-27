@@ -5,7 +5,6 @@ namespace PlanetaDelEste\DeployApp\Components;
 use Cms\Classes\ComponentBase;
 use DiDom\Document;
 use DiDom\Exceptions\InvalidSelectorException;
-use Event;
 use File;
 use PlanetaDelEste\DeployApp\Models\FrontApp;
 use PlanetaDelEste\DeployApp\Models\Version;
@@ -29,6 +28,16 @@ class Deploy extends ComponentBase
      * @var string
      */
     protected $sVersionsPath;
+
+    /**
+     * @var bool
+     */
+    protected $isS3 = false;
+
+    /**
+     * @var Version|null
+     */
+    protected $obVersion = null;
 
     public function componentDetails(): array
     {
@@ -79,8 +88,10 @@ class Deploy extends ComponentBase
 
         $this->page['token'] = session()->token();
         $obFrontApp          = FrontApp::find($iFrontAppId);
+        $this->isS3          = $obFrontApp->is_s3;
         $this->sBasePath     = str_slug($obFrontApp->name);
-        $this->version       = Version::getLatestVersion($iFrontAppId);
+        $this->obVersion     = Version::getLatest($iFrontAppId);
+        $this->version       = $this->obVersion->version;
         $this->sVersionsPath = $obFrontApp->path;
         $this->buildAssets();
     }
@@ -97,6 +108,12 @@ class Deploy extends ComponentBase
         }
 
         // Construct assets path
+        if ($this->isS3 && !empty($this->obVersion->assets)) {
+            $this->buildAssetsFromS3();
+
+            return;
+        }
+
         if ($this->isResources()) {
             $sPath = resource_path('views/'.$this->sBasePath.'/'.$this->version);
         } else {
@@ -285,6 +302,21 @@ class Deploy extends ComponentBase
             ->toArray();
     }
 
+    protected function buildAssetsFromS3(): void
+    {
+        foreach ($this->obVersion->assets as $asset) {
+            $src   = $asset['src'] ?? '';
+            $attrs = $asset['attrs'] ?? [];
+            $ext   = pathinfo($src, PATHINFO_EXTENSION);
+
+            if ('js' === $ext) {
+                $this->addJs($src, $attrs);
+            } elseif ('css' === $ext) {
+                $this->addCss($src, $attrs);
+            }
+        }
+    }
+
     /**
      * @param string $sSrc
      *
@@ -292,6 +324,10 @@ class Deploy extends ComponentBase
      */
     protected function getResourcesPath(string $sSrc): string
     {
+        if (str_starts_with($sSrc, 'http')) {
+            return $sSrc;
+        }
+
         $sSrc   = trim($sSrc, '/');
         $arPath = explode('/', $sSrc);
 

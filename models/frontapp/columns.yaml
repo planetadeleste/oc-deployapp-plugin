@@ -15,6 +15,10 @@ columns:
         searchable: true
         sortable: true
         width: 100px
+    is_s3:
+        label: 'S3'
+        type: switch
+        width: 100px
     created_at:
         label: 'lovata.toolbox::lang.field.created_at'
         type: timetense

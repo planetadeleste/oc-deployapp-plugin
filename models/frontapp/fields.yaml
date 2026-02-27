@@ -3,7 +3,7 @@ fields:
         label: 'lovata.toolbox::lang.field.name'
         span: row
         spanClass: col-lg-4
-        required: 1
+        required: true
         type: text
         placeholder: 'lovata.toolbox::lang.field.name'
 
@@ -13,7 +13,7 @@ fields:
         commentMd: 1
         span: row
         spanClass: col-lg-4
-        required: 1
+        required: true
         type: text
         placeholder: 'planetadeleste.deployapp::lang.field.path'
         trigger:
@@ -26,6 +26,9 @@ fields:
         type: switch
         span: row
         spanClass: col-lg-4
-tabs:
-    fields:
 
+    is_s3:
+        label: 'S3'
+        type: switch
+        span: row
+        spanClass: col-lg-4
