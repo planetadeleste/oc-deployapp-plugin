@@ -27,3 +27,9 @@
 1.0.10:
     - 'Add frontapp_name property'
     - 'Use onRender instead of OnRun'
+1.0.11:
+    - 'Add is_s3 property to FrontApps model'
+    - add_is_s3_frontapps_table.php
+1.0.12:
+    - 'Add assets property to Version model'
+    - add_assets_versions_table.php
