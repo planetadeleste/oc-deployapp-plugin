@@ -96,7 +96,7 @@ class FrontApp extends Model
     /**
      * @return array
      */
-    public function listVersions(): array
+    public function listVersions(?int $iCurrentVersionId = null): array
     {
         $arVersionList = [];
 
@@ -148,7 +148,23 @@ class FrontApp extends Model
             usort($arVersionList, 'version_compare');
             $arVersionList = array_reverse($arVersionList);
 
-            return array_combine(array_values($arVersionList), array_values($arVersionList));
+            $arDisabledVersionList = Version::where('frontapp_id', $this->id)
+                ->when($iCurrentVersionId, static function ($obQuery, $iCurrentVersionId): void {
+                    $obQuery->where('id', '!=', $iCurrentVersionId);
+                })
+                ->pluck('id', 'version')
+                ->all();
+
+            $arResult = [];
+
+            foreach ($arVersionList as $sVersion) {
+                $arResult[$sVersion] = [
+                    'label'    => $sVersion,
+                    'disabled' => isset($arDisabledVersionList[$sVersion]),
+                ];
+            }
+
+            return $arResult;
         }
 
         return [];

@@ -112,13 +112,13 @@ class Version extends Model
         return Db::raw("INET_ATON(SUBSTRING_INDEX(CONCAT(version,'.0.0.0'),'.',4))");
     }
 
-    public function getVersionOptions(): array
+    public function getVersionOptions($value = null, $formData = null): array
     {
         if (!$this->frontapp) {
             return [];
         }
 
-        return $this->frontapp->listVersions();
+        return $this->frontapp->listVersions($this->id ? (int) $this->id : null);
     }
 
     public function beforeSave(): void
