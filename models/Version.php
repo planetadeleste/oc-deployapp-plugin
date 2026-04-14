@@ -148,6 +148,21 @@ class Version extends Model
             $obDoc    = new Document($sHtml);
             $arAssets = [];
 
+            // Parse <style /> (inline styles, e.g. CSS @layer order declarations)
+            $arStyle = $obDoc->find('head > style');
+
+            if (!empty($arStyle) && is_array($arStyle)) {
+                foreach ($arStyle as $obStyle) {
+                    $sContent = $obStyle->text();
+
+                    if (!$sContent) {
+                        continue;
+                    }
+
+                    $arAssets[] = ['src' => null, 'type' => 'style', 'content' => $sContent];
+                }
+            }
+
             // Parse <script />
             $arScript = $obDoc->find('head > script');
 
@@ -161,7 +176,7 @@ class Version extends Model
                         continue;
                     }
 
-                    $arAssets[] = ['src' => $sSrc, 'attrs' => $arScriptAttr];
+                    $arAssets[] = ['src' => $sSrc, 'type' => 'script', 'attrs' => $arScriptAttr];
                 }
             }
 
@@ -185,7 +200,7 @@ class Version extends Model
                         continue;
                     }
 
-                    $arAssets[] = ['src' => $sHref, 'attrs' => $arLinkAttr];
+                    $arAssets[] = ['src' => $sHref, 'type' => 'link', 'attrs' => $arLinkAttr];
                 }
             }
 

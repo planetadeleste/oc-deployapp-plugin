@@ -33,3 +33,5 @@
 1.0.12:
     - 'Add assets property to Version model'
     - add_assets_versions_table.php
+1.0.13:
+    - 'Add support for parsing and rendering inline style assets in S3 deployment components'
