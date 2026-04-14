@@ -216,10 +216,6 @@ class Deploy extends ComponentBase
      */
     protected function buildAssetsFromHtml(string $sPath): void
     {
-        $sSearchPath = $this->isResources() ? resource_path('views/'.$this->sBasePath) : plugins_path($this->path());
-        $sFilePath   = str_replace($sSearchPath.'/', '', $sPath);
-        $sStartsWith = $this->isResources() ? '/resources' : '/plugins';
-
         $obDoc = new Document();
         $obDoc->loadHtmlFile($sPath.'/index.html');
 
@@ -232,12 +228,6 @@ class Deploy extends ComponentBase
                 $sSrc         = array_get($arScriptAttr, 'src');
                 $sSrc         = $this->getResourcesPath($sSrc);
                 array_forget($arScriptAttr, 'src');
-
-// if (($sSrc = array_get($arScriptAttr, 'src')) && !str_contains($sSrc, $sStartsWith)) {
-// $sSrc = ltrim($sSrc, './');
-// $sSrc = $sFilePath.'/'.$sSrc;
-// array_forget($arScriptAttr, 'src');
-// }
 
                 $this->addJs($sSrc, $arScriptAttr);
             }
@@ -261,12 +251,6 @@ class Deploy extends ComponentBase
             if ($sRel === 'icon') {
                 continue;
             }
-
-// if (($sHref = array_get($arLinkAttr, 'href')) && !str_starts_with($sHref, $sStartsWith)) {
-// $sHref = ltrim($sHref, './');
-// $sHref = $sFilePath.'/'.$sHref;
-// array_forget($arLinkAttr, 'href');
-// }
 
             $this->addCss($sHref, $arLinkAttr);
         }
@@ -304,17 +288,57 @@ class Deploy extends ComponentBase
 
     protected function buildAssetsFromS3(): void
     {
-        foreach ($this->obVersion->assets as $asset) {
-            $src   = $asset['src'] ?? '';
-            $attrs = $asset['attrs'] ?? [];
-            $ext   = pathinfo($src, PATHINFO_EXTENSION);
+        $html = '';
 
-            if ('js' === $ext) {
-                $this->addJs($src, $attrs);
-            } elseif ('css' === $ext) {
-                $this->addCss($src, $attrs);
+        foreach ($this->obVersion->assets as $asset) {
+            $src     = $asset['src'] ?? '';
+            $type    = $asset['type'] ?? 'link';
+            $attrs   = $asset['attrs'] ?? [];
+            $content = $asset['content'] ?? '';
+
+            if ('style' === $type) {
+                $html .= "<style>{$content}</style>\n";
+
+                continue;
+            }
+
+            if (!$src) {
+                continue;
+            }
+
+            if ('script' === $type) {
+                $attrStr = $this->buildHtmlAttrString(array_merge(['src' => $src], $attrs));
+                $html   .= "<script {$attrStr}></script>\n";
+            } else {
+                $attrStr = $this->buildHtmlAttrString(array_merge(['href' => $src], $attrs));
+                $html   .= "<link {$attrStr} />\n";
             }
         }
+
+        $this->page['s3_head_assets'] = $html;
+    }
+
+    /**
+     * Builds an HTML attribute string from an array.
+     * Boolean-like values (empty string or true) are rendered as standalone attributes (e.g. crossorigin).
+     *
+     * @param array $attrs
+     *
+     * @return string
+     */
+    protected function buildHtmlAttrString(array $attrs): string
+    {
+        $parts = [];
+
+        foreach ($attrs as $key => $value) {
+            if ('' === $value || true === $value) {
+                $parts[] = htmlspecialchars((string) $key, ENT_QUOTES);
+            } elseif (false !== $value && null !== $value) {
+                $parts[] = htmlspecialchars((string) $key, ENT_QUOTES).'="'.htmlspecialchars((string) $value, ENT_QUOTES).'"';
+            }
+        }
+
+        return implode(' ', $parts);
     }
 
     /**
