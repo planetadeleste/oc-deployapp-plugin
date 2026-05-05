@@ -176,7 +176,7 @@ class Version extends Model
                         continue;
                     }
 
-                    $arAssets[] = ['src' => $sSrc, 'type' => 'script', 'attrs' => $arScriptAttr];
+                    $arAssets[] = ['src' => $this->normalizeAssetUrl($sSrc), 'type' => 'script', 'attrs' => $arScriptAttr];
                 }
             }
 
@@ -200,7 +200,7 @@ class Version extends Model
                         continue;
                     }
 
-                    $arAssets[] = ['src' => $sHref, 'type' => 'link', 'attrs' => $arLinkAttr];
+                    $arAssets[] = ['src' => $this->normalizeAssetUrl($sHref), 'type' => 'link', 'attrs' => $arLinkAttr];
                 }
             }
 
@@ -208,5 +208,38 @@ class Version extends Model
         } catch (Exception $e) {
             Log::error('Error fetching/parsing S3 index.html for '.$this->frontapp->name.' version '.$this->version.': '.$e->getMessage());
         }
+    }
+
+    /**
+     * Normaliza la URL de un asset reemplazando el origen (scheme + host)
+     * con el valor de AWS_URL, para que coincida con el entorno actual
+     * (ej. dev → https://cdnd.alvis.uy, prod → https://cdn.alvis.uy).
+     *
+     * @param string $url
+     *
+     * @return string
+     */
+    protected function normalizeAssetUrl(string $url): string
+    {
+        $sBaseUrl = rtrim((string) env('AWS_URL', ''), '/');
+
+        if (!$sBaseUrl || !str_starts_with($url, 'http')) {
+            return $url;
+        }
+
+        $arParsed = parse_url($url);
+
+        if (empty($arParsed['host'])) {
+            return $url;
+        }
+
+        $sOrigin = ($arParsed['scheme'] ?? 'https').'://'.$arParsed['host'];
+        $sPath   = $arParsed['path'] ?? '';
+
+        if ($sOrigin === $sBaseUrl) {
+            return $url;
+        }
+
+        return $sBaseUrl.$sPath;
     }
 }
